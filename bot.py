@@ -15,7 +15,7 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 # توكن البوت - يجب استبداله بالتوكن الخاص بك
-TOKEN = "YOUR_TELEGRAM_BOT_TOKEN"
+TOKEN = os.getenv('TELEGRAM_BOT_TOKEN')  # يجب أن تكون هذه هي الطريقة الصحيحة
 
 # مفتاح API لـ YouTube - يجب استبداله بالمفتاح الخاص بك
 YOUTUBE_API_KEY = "YOUR_YOUTUBE_API_KEY"
