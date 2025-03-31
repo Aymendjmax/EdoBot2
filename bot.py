@@ -416,10 +416,14 @@ async def error_handler(update: object, context: ContextTypes.DEFAULT_TYPE) -> N
     logger.error(f"حدث خطأ: {context.error}")
 
 def main() -> None:
-    """دالة التشغيل الرئيسية"""
-    # إنشاء التطبيق
+    """إعداد تطبيق تيليجرام باستخدام webhook"""
+    # الحصول على متغيرات البيئة
+    webhook_url = os.getenv('WEBHOOK_URL')
+    port = int(os.getenv('PORT', 5000))
+    
+    # إنشاء تطبيق
     application = Application.builder().token(TOKEN).build()
-
+    
     # إضافة معالج المحادثة للبحث
     conv_handler = ConversationHandler(
         entry_points=[CommandHandler("search", search_command)],
@@ -444,30 +448,24 @@ def main() -> None:
     # معالج الأخطاء
     application.add_error_handler(error_handler)
     
-    # بدء البوت
-    application.run_polling()
-
-# للحفاظ على تشغيل البوت 24/7 باستخدام Render
-if __name__ == "__main__":
-    port = int(os.environ.get('PORT', 5000))
-    
-    # إعداد webhook إذا كان يعمل على Render
-    if 'RENDER' in os.environ:
-        # استخدام webhook للحفاظ على التشغيل 24/7
-        from telegram.ext import Updater
+    # تحديد ما إذا كان يجب استخدام webhook أو polling
+    # في بيئة الإنتاج (مثل Render)، استخدم webhook
+    if webhook_url:
+        # إعداد webhook
+        webhook_path = f"/{TOKEN}"
+        full_webhook_url = f"{webhook_url}{webhook_path}"
         
-        webhook_url = os.environ.get('WEBHOOK_URL')
-        
-        if webhook_url:
-            application = Application.builder().token(TOKEN).build()
-            application.run_webhook(
-                listen="0.0.0.0",
-                port=port,
-                url_path=TOKEN,
-                webhook_url=webhook_url + TOKEN
-            )
-        else:
-            main()
+        application.run_webhook(
+            listen="0.0.0.0",
+            port=port,
+            url_path=webhook_path,
+            webhook_url=full_webhook_url
+        )
+        logger.info(f"تم تشغيل البوت باستخدام webhook على المنفذ {port}")
     else:
-        # تشغيل البوت محلياً
-        main()
+        # في بيئة التطوير المحلية، استخدم polling
+        application.run_polling()
+        logger.info("تم تشغيل البوت محلياً باستخدام polling")
+
+if __name__ == "__main__":
+    main()
