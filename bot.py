@@ -41,10 +41,13 @@ BANNED_WORDS = [
 def is_educational(query: str) -> bool:
     """فلترة ذكية للأسئلة غير الدراسية"""
     query_lower = query.lower()
-    return (
-        not any(word in query_lower for word in BANNED_WORDS) and 
-        any(subject in query_lower for subject in ALLOWED_SUBJECTS
-    )
+    
+    # الفلترة السلبية (الكلمات الممنوعة)
+    if any(word in query_lower for word in BANNED_WORDS):
+        return False
+    
+    # الفلترة الإيجابية (المواضيع المسموحة)
+    return any(subject in query_lower for subject in ALLOWED_SUBJECTS)
 
 # =================================================================
 #                البحث باستخدام Mistral-7B (بدون API Key)          
@@ -124,7 +127,26 @@ async def reset_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
         context.user_data.clear()
     await update.message.reply_text("🔄 تمت إعادة ضبط البوت بنجاح")
 
-# ... (بقية الدوال handle_search و search_command تبقى كما هي)
+async def search_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    """بدء عملية البحث"""
+    await update.message.reply_text(
+        "🔍 **أدخل سؤالك الدراسي:**\n"
+        "مثال:\n"
+        "- 'ما هي أنواع المعادلات في الرياضيات؟'\n"
+        "- 'اشرح عملية البناء الضوئي'\n"
+        "- 'تلخيص درس الثورة الصناعية'"
+    )
+    return 1
+
+async def handle_search(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    """معالجة طلب البحث"""
+    query = update.message.text
+    await update.message.reply_text("⏳ جاري البحث في المنهج الرسمي...")
+    
+    result = await search_with_mistral(query)
+    await update.message.reply_text(f"📚 **النتيجة:**\n\n{result}")
+    
+    return ConversationHandler.END
 
 # =================================================================
 #                         التشغيل الرئيسي                        
@@ -135,7 +157,7 @@ def main():
     # تسجيل الأوامر
     commands = [
         ("start", start),
-        ("creator", creator_command),  # <-- الأمر الجديد
+        ("creator", creator_command),
         ("who", who_command),
         ("job", job_command),
         ("reset", reset_command),
