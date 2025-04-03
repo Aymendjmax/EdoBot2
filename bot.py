@@ -159,9 +159,6 @@ async def creator_command(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
         "👨💻 **معلومات المطور:**\n"
         "- الاسم: Aymen DJ Max\n"
         "- الموقع: https://adm-web.ct.ws\n"
-        "- الجيتهاب: github.com/AymenDJMax\n"
-        "📧 للدعم الفني: contact@adm-web.ct.ws",
-        disable_web_page_preview=True
     )
 
 async def job_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
